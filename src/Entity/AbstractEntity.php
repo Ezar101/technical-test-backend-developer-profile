@@ -19,6 +19,12 @@ abstract class AbstractEntity
     #[ORM\Column(type: 'datetime')]
     protected \DateTimeInterface $updatedAt;
 
+    public function __construct()
+    {
+        $this->setCreatedAt(new \DateTime());
+        $this->setUpdatedAt(new \DateTime());
+    }
+
     public function getId(): ?int
     {
         return $this->id;
