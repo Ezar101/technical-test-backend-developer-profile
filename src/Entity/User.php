@@ -4,57 +4,126 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\OpenApi\OpenApiFactory;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
+use App\Controller\ProfileController;
+use ApiPlatform\Core\Action\NotFoundAction;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Table(name: '`users`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ApiResource()]
-class User extends AbstractEntity
+#[
+    ApiResource(
+        security: 'is_granted("ROLE_SUPER_ADMIN")',
+        collectionOperations: [
+            'profile' => [
+                'pagination_enabled' => false,
+                'path' => ProfileController::PROFILE_PATH,
+                'method' => 'get',
+                'controller' => ProfileController::class,
+                'read' => false,
+                // 'security' => 'is_granted("ROLE_SUPER_ADMIN")',
+                'openapi_context' => [
+                    'security' => [
+                        'apiKey' => ['cookieAuth' => []]
+                    ]
+                ]
+            ]
+        ],
+        itemOperations: [
+            'get' => [
+                'controller' => NotFoundAction::class,
+                'openapi_context' => [
+                    'summary' => OpenApiFactory::OPEN_API_CONTEXT_HIDDEN
+                ],
+                'read' => false,
+                'output' => false
+            ]
+        ],
+        normalizationContext: [
+            'groups' => ['read:User']
+        ]
+    )
+]
+class User extends AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    #[ORM\Column(type: 'string', length: 255)]
-    private string $firstname;
+    #[Groups(['read:User'])]
+    #[ORM\Column(type: 'string', length: 180, unique: true)]
+    private string $email;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $lastname;
+    #[Groups(['read:User'])]
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
 
-    #[ORM\ManyToOne(targetEntity: UserGroup::class, inversedBy: 'users')]
-    private ?UserGroup $userGroup;
+    #[ORM\Column(type: 'string')]
+    private string $password;
 
-    public function getFirstname(): string
+    public function getEmail(): ?string
     {
-        return $this->firstname;
+        return $this->email;
     }
 
-    public function setFirstname(string $firstname): self
+    public function setEmail(string $email): self
     {
-        $this->firstname = $firstname;
+        $this->email = $email;
 
         return $this;
     }
 
-    public function getLastname(): ?string
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
     {
-        return $this->lastname;
+        return (string) $this->email;
     }
 
-    public function setLastname(?string $lastname): self
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
     {
-        $this->lastname = $lastname;
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
 
         return $this;
     }
 
-    public function getUserGroup(): ?UserGroup
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
     {
-        return $this->userGroup;
+        return $this->password;
     }
 
-    public function setUserGroup(?UserGroup $userGroup): self
+    public function setPassword(string $password): self
     {
-        $this->userGroup = $userGroup;
+        $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 }
