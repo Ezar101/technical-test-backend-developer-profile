@@ -19,21 +19,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[
     ApiResource(
         security: 'is_granted("ROLE_SUPER_ADMIN")',
-        collectionOperations: [
-            'profile' => [
-                'pagination_enabled' => false,
-                'path' => ProfileController::PROFILE_PATH,
-                'method' => 'get',
-                'controller' => ProfileController::class,
-                'read' => false,
-                // 'security' => 'is_granted("ROLE_SUPER_ADMIN")',
-                'openapi_context' => [
-                    'security' => [
-                        'apiKey' => ['cookieAuth' => []]
-                    ]
-                ]
-            ]
-        ],
+        collectionOperations: [],
         itemOperations: [
             'get' => [
                 'controller' => NotFoundAction::class,
@@ -42,8 +28,22 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
                 ],
                 'read' => false,
                 'output' => false
+            ],
+            'profile' => [
+                'pagination_enabled' => false,
+                'path' => ProfileController::PROFILE_PATH,
+                'method' => 'get',
+                'controller' => ProfileController::class,
+                'read' => false,
+                // 'security' => 'is_granted("ROLE_SUPER_ADMIN")',
+                'openapi_context' => [
+                    'description' => 'Retrieves a User resource. ' . OpenApiFactory::OPEN_API_TAG_WITHOUT_IDENTIFIER,
+                    'security' => [
+                        'apiKey' => ['cookieAuth' => []]
+                    ]
+                ]
             ]
-        ],
+        ],        
         normalizationContext: [
             'groups' => ['read:User']
         ]

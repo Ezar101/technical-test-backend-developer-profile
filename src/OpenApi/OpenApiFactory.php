@@ -7,6 +7,7 @@ namespace App\OpenApi;
 use ApiPlatform\Core\OpenApi\OpenApi;
 use ApiPlatform\Core\OpenApi\Model\PathItem;
 use ApiPlatform\Core\OpenApi\Model\Operation;
+use ApiPlatform\Core\OpenApi\Model\Parameter;
 use Symfony\Component\HttpFoundation\Response;
 use ApiPlatform\Core\OpenApi\Model\RequestBody;
 use ApiPlatform\Core\OpenApi\Factory\OpenApiFactoryInterface;
@@ -14,6 +15,7 @@ use ApiPlatform\Core\OpenApi\Factory\OpenApiFactoryInterface;
 class OpenApiFactory implements OpenApiFactoryInterface
 {
     public const OPEN_API_CONTEXT_HIDDEN = 'hidden';
+    public const OPEN_API_TAG_WITHOUT_IDENTIFIER = '#withoutIdentifier';
 
     public function __construct(private OpenApiFactoryInterface $decorated)
     {}
@@ -52,7 +54,21 @@ class OpenApiFactory implements OpenApiFactoryInterface
         ]);
 
         // $openApi = $openApi->withSecurity(['cookieAuth' => []]);
-        $pathItem = new PathItem(
+        // $profileOperation = $openApi->getPaths()->getPath('/api/profile')->getGet()->withParameters([]);
+        // $profilePathItem = $openApi->getPaths()->getPath('/api/profile')->withGet($profileOperation);
+        // $openApi->getPaths()->addPath('/api/profile', $profilePathItem);
+        $openApi = $this->resourceWithoutIdentifier($openApi);
+        
+
+        $openApi->getPaths()->addPath('/api/login', $this->getPostApiLoginPath());
+        $openApi->getPaths()->addPath('/logout', $this->getPostApiLogoutPath());
+
+        return $openApi;
+    }
+
+    private function getPostApiLoginPath(): PathItem
+    {
+        return new PathItem(
             post: new Operation(
                 operationId: 'postApiLogin',
                 tags: ['User'],
@@ -79,8 +95,56 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 ]
             )
         );
+    }
 
-        $openApi->getPaths()->addPath('/api/login', $pathItem);
+    private function getPostApiLogoutPath(): PathItem
+    {
+        return new PathItem(
+            post: new Operation(
+                operationId: 'postApiLogout',
+                tags: ['User'],
+                responses: [
+                    Response::HTTP_NO_CONTENT => []
+                ]
+            )
+        );
+    }
+
+    private function resourceWithoutIdentifier(OpenApi $openApi): OpenApi
+    {
+        foreach ($openApi->getPaths()->getPaths() as $path => $pathItem) {
+            // remove identifier parameter from operations which include "#withoutIdentifier" in the description
+            foreach (PathItem::$methods as $method) {
+                $getter = 'get' . ucfirst(strtolower($method));
+                $setter = 'with' . ucfirst(strtolower($method));
+                
+                /** @var Operation $operation */
+                $operation = $pathItem->$getter();
+                
+                //echo $operation->getDescription().'<br />';
+                if (
+                    $operation 
+                    && preg_match(sprintf("/%s/", self::OPEN_API_TAG_WITHOUT_IDENTIFIER), $operation->getDescription())
+                ) {
+                    /** @var Parameter[] $parameters */
+                    $parameters = $operation->getParameters();
+                    foreach ($parameters as $i => $parameter) {
+                        if (preg_match('/identifier/i', $parameter->getDescription())) {
+                            unset($parameters[$i]);
+                            break;
+                        }
+                    }
+
+                    $description = str_replace(self::OPEN_API_TAG_WITHOUT_IDENTIFIER, '', $operation->getDescription());
+                    $openApi->getPaths()->addPath(
+                        $path, 
+                        $pathItem = $pathItem->$setter(
+                            $operation->withDescription($description)->withParameters(array_values($parameters))
+                        )
+                    );
+                }
+            }
+        }
 
         return $openApi;
     }
