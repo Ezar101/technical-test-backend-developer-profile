@@ -26,7 +26,11 @@ vim .env.local
 $ composer install
 $ php bin/console assets:install --symlink
 $ php bin/console cache:clear
+$ php bin/console doctrine:database:create --if-not-exists
 $ php bin/console doctrine:migrations:migrate --no-interaction
+
+#Insert datas fixtures
+$ php bin/console doctrine:fixture:load
 
 # Generate the SSL keys
 $ php bin/console lexik:jwt:generate-keypair

@@ -9,6 +9,7 @@ use App\Repository\MemberRepository;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ORM\HasLifecycleCallbacks()]
 #[ORM\Table(name: '`members`')]
 #[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ApiResource()]
