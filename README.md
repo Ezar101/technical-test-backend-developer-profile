@@ -28,6 +28,9 @@ $ php bin/console assets:install --symlink
 $ php bin/console cache:clear
 $ php bin/console doctrine:migrations:migrate --no-interaction
 
+# Generate the SSL keys
+$ php bin/console lexik:jwt:generate-keypair
+
 # Run Server
 $ php -S localhost:8000 -t public # Based to php server
 $ symfony server:start # Based to symfony server 
@@ -44,4 +47,8 @@ $ composer update
 
 # SF console
 $ php bin/console
+
+# Generate the SSL keys
+$ php bin/console lexik:jwt:generate-keypair --skip-if-exists # will silently do nothing if keys already exist.
+$ php bin/console lexik:jwt:generate-keypair --overwrite # will overwrite your keys if they already exist.
 ```

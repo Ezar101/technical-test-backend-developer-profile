@@ -12,6 +12,7 @@ use ApiPlatform\Core\Action\NotFoundAction;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Table(name: '`users`')]
@@ -39,7 +40,8 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
                 'openapi_context' => [
                     'description' => 'Retrieves a User resource. ' . OpenApiFactory::OPEN_API_TAG_WITHOUT_IDENTIFIER,
                     'security' => [
-                        'apiKey' => ['cookieAuth' => []]
+                        /* ['cookieAuth' => []], */
+                        ['bearerAuth' => []]
                     ]
                 ]
             ]
@@ -49,11 +51,11 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
         ]
     )
 ]
-class User extends AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface
+class User extends AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface, JWTUserInterface
 {
     #[Groups(['read:User'])]
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    private string $email;
+    private string $email = '';
 
     #[Groups(['read:User'])]
     #[ORM\Column(type: 'json')]
@@ -61,6 +63,22 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
 
     #[ORM\Column(type: 'string')]
     private string $password;
+
+    public static function createFromPayload($id, array $payload)
+    {
+        return (new self())
+            ->setId(intval($id))
+            ->setEmail($payload['username'] ?? '')
+            ->setRoles($payload['roles'])
+        ;
+    }
+
+    public function setId(?int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
 
     public function getEmail(): ?string
     {
@@ -82,6 +100,11 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->getUserIdentifier();
     }
 
     /**
