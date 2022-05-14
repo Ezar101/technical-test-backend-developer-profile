@@ -32,10 +32,15 @@ class OpenApiFactory implements OpenApiFactoryInterface
         }
 
         $securitySchemes = $openApi->getComponents()->getSecuritySchemes();
-        $securitySchemes['cookieAuth'] = new \ArrayObject([
-            'type' => 'apiKey',
-            'in'   => 'cookie',
-            'name' => 'PHPSESSID'
+        // $securitySchemes['cookieAuth'] = new \ArrayObject([
+        //     'type' => 'apiKey',
+        //     'in'   => 'cookie',
+        //     'name' => 'PHPSESSID'
+        // ]);
+        $securitySchemes['bearerAuth'] = new \ArrayObject([
+            'type' => 'http',
+            'scheme'   => 'bearer',
+            'bearerFormat' => 'JWT'
         ]);
 
         $schemas = $openApi->getComponents()->getSchemas();
@@ -49,6 +54,15 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 'password' => [
                     'type' => 'string',
                     'example' => '12345678'
+                ]
+            ]
+        ]);
+        $schemas['Token'] = new \ArrayObject([
+            'type' => 'object',
+            'properties' => [
+                'token' => [
+                    'type' => 'string',
+                    'readOnly' => true
                 ]
             ]
         ]);
@@ -83,11 +97,13 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 ),
                 responses: [
                     Response::HTTP_OK => [
-                        'description' => 'Logged in user',
+                        // 'description' => 'Logged in user',
+                        'description' => 'Token JWT',
                         'content' => [
                             'application/json' => [
                                 'schema' => [
-                                    '$ref' => '#/components/schemas/User-read.User'
+                                    // '$ref' => '#/components/schemas/User-read.User'
+                                    '$ref' => '#/components/schemas/Token'
                                 ],
                             ],
                         ],

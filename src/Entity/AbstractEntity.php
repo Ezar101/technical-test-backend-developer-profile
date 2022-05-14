@@ -14,16 +14,10 @@ abstract class AbstractEntity
     protected ?int $id;
 
     #[ORM\Column(type: 'datetime')]
-    protected \DateTimeInterface $createdAt;
+    protected ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(type: 'datetime')]
-    protected \DateTimeInterface $updatedAt;
-
-    public function __construct()
-    {
-        $this->setCreatedAt(new \DateTime());
-        $this->setUpdatedAt(new \DateTime());
-    }
+    protected ?\DateTimeInterface $updatedAt = null;
 
     public function getId(): ?int
     {
@@ -52,5 +46,15 @@ abstract class AbstractEntity
         $this->updatedAt = $updatedAt;
 
         return $this;
+    }
+
+    #[ORM\PrePersist, ORM\PreUpdate]
+    public function setDateTimeValue(): void
+    {
+        if (null === $this->createdAt) {
+            $this->createdAt = new \DateTime();
+        }
+
+        $this->updatedAt = new \DateTime();
     }
 }
