@@ -2,11 +2,19 @@
 
 As part of the recruitment process, you are required to complete a small technical test to showcase how you tackle a basic programming task.
 
+## Stack
+
+- [Symfony](https://symfony.com/)
+- [Api Platform](https://api-platform.com/)
+- [MySQL](https://dev.mysql.com/doc/)
+- [Pico.css](https://picocss.com/)
+- [Bootstrap Icons](https://icons.getbootstrap.com/)
+
 ## Requirements
 
-- PHP 8.0 or later
-- `composer` command (See [Composer Installation](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos))
-- Git
+- `PHP` 8.0 or later
+- `Composer` command (See [Composer Installation](https://getcomposer.org/doc/00-intro.md))
+- `Git`
 
 ## How to Use
 
@@ -39,6 +47,10 @@ $ php bin/console lexik:jwt:generate-keypair
 $ php -S localhost:8000 -t public # Based to php server
 $ symfony server:start # Based to symfony server 
 ```
+### Users to Log in
+
+* john@admin.fr / admin
+* john@user.fr / user
 
 ### Useful commands
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Member;
+use App\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -20,5 +21,16 @@ class MemberRepository extends BaseRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Member::class);
+    }
+
+    public function getMembers(int $page = 1): Paginator
+    {
+        $queryBuilder = $this->createQueryBuilder('members')
+            ->addSelect('memberGroups')
+            ->leftJoin('members.memberGroups', 'memberGroups')
+            ->orderBy('members.createdAt', 'DESC')
+        ;
+
+        return (new Paginator($queryBuilder))->paginate($page);
     }
 }

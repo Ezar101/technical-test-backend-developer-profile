@@ -9,7 +9,6 @@ use App\Repository\MemberGroupRepository;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\HasLifecycleCallbacks()]
 #[ORM\Table(name: '`member_groups`')]
@@ -17,21 +16,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource()]
 class MemberGroup extends AbstractEntity
 {
-    #[
-        ORM\Column(type: 'string', length: 255, unique: true),
-        Assert\NotBlank()
-    ]
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
     private string $name;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description;
 
-    #[ORM\OneToMany(mappedBy: 'memberGroup', targetEntity: Member::class)]
-    private $members;
+    /**
+     * @var Member[]|Collection
+     */
+    #[ORM\ManyToMany(targetEntity: Member::class, inversedBy: 'memberGroups', cascade: ['persist'])]
+    #[ORM\OrderBy(['createdAt' => 'DESC'])]
+    private Collection $members;
 
     public function __construct()
     {
         $this->members = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     public function getName(): string
@@ -68,9 +73,8 @@ class MemberGroup extends AbstractEntity
 
     public function addMember(Member $member): self
     {
-        if (!$this->members->contains($member)) {
+        if (!$this->getMembers()->contains($member)) {
             $this->members[] = $member;
-            $member->setMemberGroup($this);
         }
 
         return $this;
@@ -78,12 +82,7 @@ class MemberGroup extends AbstractEntity
 
     public function removeMember(Member $member): self
     {
-        if ($this->members->removeElement($member)) {
-            // set the owning side to null (unless already changed)
-            if ($member->getMemberGroup() === $this) {
-                $member->setMemberGroup(null);
-            }
-        }
+        $this->getMembers()->removeElement($member);
 
         return $this;
     }
