@@ -6,24 +6,22 @@ namespace App\Controller;
 
 use App\Entity\MemberGroup;
 use App\Form\MemberGroupType;
+use App\Repository\MemberRepository;
+use App\Security\Voter\MemberGroupVoter;
 use App\Repository\MemberGroupRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[Route('/group', name: 'group_')]
 class MemberGroupController extends AbstractController
 {
     #[Route('/create', name: 'create', methods: ['POST', 'GET'])]
+    #[IsGranted('ROLE_SUPER_ADMIN', message: 'User tried to access a page without having ROLE_SUPER_ADMIN')]
     public function create(MemberGroupRepository $memberGroupRepository, Request $request): Response
     {
-        $this->denyAccessUnlessGranted(
-            'ROLE_SUPER_ADMIN', 
-            null, 
-            'User tried to access a page without having ROLE_SUPER_ADMIN'
-        );
-        
         $group = new MemberGroup();
 
         $form = $this->createForm(MemberGroupType::class, $group);
@@ -40,22 +38,9 @@ class MemberGroupController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/edit', name: 'edit', methods: ['POST', 'GET'])]
-    public function edit(int $id, MemberGroupRepository $memberGroupRepository, Request $request): Response
+    #[IsGranted('ROLE_SUPER_ADMIN', message: 'User tried to access a page without having ROLE_SUPER_ADMIN')]
+    public function edit(MemberGroup $group, MemberGroupRepository $memberGroupRepository, Request $request): Response
     {
-        $this->denyAccessUnlessGranted(
-            'ROLE_SUPER_ADMIN', 
-            null, 
-            'User tried to access a page without having ROLE_SUPER_ADMIN'
-        );
-        
-        $group = $memberGroupRepository->find($id);
-
-        if (!$group) {
-            throw $this->createNotFoundException(
-                sprintf('No Group found for id %s', $id)
-            );
-        }
-
         $form = $this->createForm(MemberGroupType::class, $group);
         $form->handleRequest($request);
 
@@ -68,5 +53,41 @@ class MemberGroupController extends AbstractController
             'group' => $group,
             'form'  => $form
         ]);
+    }
+
+    #[Route('/{id<\d+>}/remove/member', name: 'remove_member', methods: ['POST'])]
+    #[IsGranted('ROLE_SUPER_ADMIN', message: 'User tried to access a page without having ROLE_SUPER_ADMIN')]
+    public function removeMember(
+        MemberGroup $group, 
+        MemberGroupRepository $memberGroupRepository, 
+        MemberRepository $memberRepository,
+        Request $request
+    ): Response {
+        $memberId = $request->request->getInt('member');
+        $member = $memberRepository->find($memberId);
+
+        if (!$member) {
+            throw $this->createNotFoundException(
+                sprintf('No Member found for id %s', $memberId)
+            );
+        }
+
+        $group->removeMember($member);
+        $memberGroupRepository->add($group);
+
+        return $this->redirectToRoute('app_home');
+    }
+
+    #[Route('/{id<\d+>}/delete', methods: ['POST'], name: 'delete')]
+    #[IsGranted(MemberGroupVoter::DELETE, subject: 'group')]
+    public function delete(MemberGroup $group, Request $request, MemberGroupRepository $memberGroupRepository): Response
+    {
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('token'))) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        $memberGroupRepository->remove($group);
+
+        return $this->redirectToRoute('app_home');
     }
 }

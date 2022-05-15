@@ -25,7 +25,7 @@ class Member extends AbstractEntity
     /**
      * @var MemberGroup[]|Collection
      */
-    #[ORM\ManyToMany(targetEntity: MemberGroup::class, mappedBy: 'members', cascade: ['all'])]
+    #[ORM\ManyToMany(targetEntity: MemberGroup::class, mappedBy: 'members', cascade: ['persist'])]
     #[ORM\OrderBy(['createdAt' => 'DESC'])]
     private Collection $memberGroups;
 

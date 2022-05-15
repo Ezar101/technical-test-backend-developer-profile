@@ -25,13 +25,18 @@ class MemberGroup extends AbstractEntity
     /**
      * @var Member[]|Collection
      */
-    #[ORM\ManyToMany(targetEntity: Member::class, inversedBy: 'memberGroups', cascade: ['all'])]
+    #[ORM\ManyToMany(targetEntity: Member::class, inversedBy: 'memberGroups', cascade: ['persist'])]
     #[ORM\OrderBy(['createdAt' => 'DESC'])]
     private Collection $members;
 
     public function __construct()
     {
         $this->members = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     public function getName(): string
