@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {% for rows in groups|batch(4, 'No item') %}
+        <div class="grid">
+            {% for group in rows %}
+                {% if group != 'No item' %}
+                    <div>
+                        <article>
+                            <p>{{ group.name }}</p>
+                            <span>{{ group.description }}</span>
+
+                            {% if group.members.count > 0 %}
+                                <details>
+                                    <summary>{{ 'Members'|trans }}</summary>
+                                    <ul>
+                                        {% for member in group.members %}
+                                            <li>{{ member.firstname ~ ' ' ~ member.lastname }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            {% endif %}
+
+                            {% if is_granted('ROLE_SUPER_ADMIN') %}
+                                <footer>
+                                    <a href="{{ path('group_add_member', {id: group.id}) }}" role="button">{{ 'Add member'|trans }}</a>
+                                </footer>
+                            {% endif %}
+                        </article>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}
