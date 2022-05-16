@@ -13,7 +13,48 @@ use Doctrine\Common\Collections\ArrayCollection;
 #[ORM\HasLifecycleCallbacks()]
 #[ORM\Table(name: '`member_groups`')]
 #[ORM\Entity(repositoryClass: MemberGroupRepository::class)]
-#[ApiResource()]
+#[
+    ApiResource(
+        collectionOperations: [
+            'get',
+            'post' => [
+                'security' => "is_granted('ROLE_SUPER_ADMIN')",
+                'openapi_context' => [
+                    'security' => [
+                        ['bearerAuth' => []]
+                    ]
+                ]
+            ]
+        ],
+        itemOperations: [
+            'get',
+            'patch' => [
+                'security' => "is_granted('ROLE_SUPER_ADMIN')",
+                'openapi_context' => [
+                    'security' => [
+                        ['bearerAuth' => []]
+                    ]
+                ]
+            ],
+            'put' => [
+                'security' => "is_granted('ROLE_SUPER_ADMIN')",
+                'openapi_context' => [
+                    'security' => [
+                        ['bearerAuth' => []]
+                    ]
+                ]
+            ],
+            'delete' => [
+                'security' => "is_granted('ROLE_SUPER_ADMIN')",
+                'openapi_context' => [
+                    'security' => [
+                        ['bearerAuth' => []]
+                    ]
+                ]
+            ]
+        ]
+    )
+]
 class MemberGroup extends AbstractEntity
 {
     #[ORM\Column(type: 'string', length: 255, unique: true)]
