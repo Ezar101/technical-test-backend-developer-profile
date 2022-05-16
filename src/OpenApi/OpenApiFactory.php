@@ -32,11 +32,7 @@ class OpenApiFactory implements OpenApiFactoryInterface
         }
 
         $securitySchemes = $openApi->getComponents()->getSecuritySchemes();
-        // $securitySchemes['cookieAuth'] = new \ArrayObject([
-        //     'type' => 'apiKey',
-        //     'in'   => 'cookie',
-        //     'name' => 'PHPSESSID'
-        // ]);
+
         $securitySchemes['bearerAuth'] = new \ArrayObject([
             'type' => 'http',
             'scheme'   => 'bearer',
@@ -67,12 +63,7 @@ class OpenApiFactory implements OpenApiFactoryInterface
             ]
         ]);
 
-        // $openApi = $openApi->withSecurity(['cookieAuth' => []]);
-        // $profileOperation = $openApi->getPaths()->getPath('/api/profile')->getGet()->withParameters([]);
-        // $profilePathItem = $openApi->getPaths()->getPath('/api/profile')->withGet($profileOperation);
-        // $openApi->getPaths()->addPath('/api/profile', $profilePathItem);
         $openApi = $this->resourceWithoutIdentifier($openApi);
-        
 
         $openApi->getPaths()->addPath('/api/login', $this->getPostApiLoginPath());
         $openApi->getPaths()->addPath('/logout', $this->getPostApiLogoutPath());
@@ -97,12 +88,10 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 ),
                 responses: [
                     Response::HTTP_OK => [
-                        // 'description' => 'Logged in user',
                         'description' => 'Token JWT',
                         'content' => [
                             'application/json' => [
                                 'schema' => [
-                                    // '$ref' => '#/components/schemas/User-read.User'
                                     '$ref' => '#/components/schemas/Token'
                                 ],
                             ],
@@ -137,7 +126,6 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 /** @var Operation $operation */
                 $operation = $pathItem->$getter();
                 
-                //echo $operation->getDescription().'<br />';
                 if (
                     $operation 
                     && preg_match(sprintf("/%s/", self::OPEN_API_TAG_WITHOUT_IDENTIFIER), $operation->getDescription())

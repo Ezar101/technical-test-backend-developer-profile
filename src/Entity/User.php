@@ -37,11 +37,9 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
                 'method' => 'get',
                 'controller' => ProfileController::class,
                 'read' => false,
-                // 'security' => 'is_granted("ROLE_SUPER_ADMIN")',
                 'openapi_context' => [
                     'description' => 'Retrieves a User resource. ' . OpenApiFactory::OPEN_API_TAG_WITHOUT_IDENTIFIER,
                     'security' => [
-                        /* ['cookieAuth' => []], */
                         ['bearerAuth' => []]
                     ]
                 ]
